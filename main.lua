@@ -8,6 +8,9 @@ local function entry(self)
 	local h = cx.active.current.hovered
 
 	os.execute('fasd -A "' .. tostring(h.url) .. '"')
+	if h and h.cha.is_dir then
+		os.execute('zoxide add "' .. tostring(h.url) .. '"')
+	end
 	ya.emit(h and "enter" or "open", { hovered = not self.open_multi })
 end
 
