@@ -6,8 +6,9 @@ end
 
 local function entry(self)
 	local h = cx.active.current.hovered
-
+	ya.dbg('fasd -A "' .. tostring(h.url) .. '"')
 	if h and (h.cha.is_dir or h.cha.is_file) then
+		ya.dbg('fasd -A "' .. tostring(h.url) .. '"')
 		os.execute('fasd -A "' .. tostring(h.url) .. '"')
 	end
 	ya.manager_emit(h and (h.cha.is_dir or h.cha.is_file) and "enter" or "open", { hovered = not self.open_multi })
