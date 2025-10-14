@@ -10,7 +10,7 @@ local function entry(self)
 	if h and (h.cha.is_dir or h.cha.is_file) then
 		os.execute('fasd -A "' .. tostring(h.url) .. '"')
 	end
-	ya.manager_emit(h and h.cha.is_dir and "enter" or "open", { hovered = not self.open_multi })
+	ya.manager_emit(h and (h.cha.is_dir or h.cha.is_file) and "enter" or "open", { hovered = not self.open_multi })
 end
 
 return { entry = entry, setup = setup }
