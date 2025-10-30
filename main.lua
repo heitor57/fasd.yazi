@@ -1,14 +1,5 @@
-local state = ya.sync(function(st)
-	return {
-		cwd = tostring(cx.active.current.cwd),
-		empty = st.empty,
-	}
-end)
-
-local set_state = ya.sync(function(st, empty)
-	st.empty = empty
-end)
-
+--- @sync entry
+-- fasd.lua
 local function fail(s, ...)
 	ya.notify({
 		title = "Fasd",
@@ -19,93 +10,69 @@ local function fail(s, ...)
 end
 
 -- Check if fasd database has any entries
-local function empty()
+local function is_empty()
 	local child = Command("fasd"):arg({ "-l" }):stdout(Command.PIPED):spawn()
-
 	if not child then
 		return true
 	end
-
 	local first = child:read_line()
 	child:start_kill()
 	return not first
 end
 
--- fasd -A "$PWD" on directory change
-local function setup(_, opts)
-	opts = opts or {}
+-- Main entry, chooses between "open" and "fzf" via args[1]
+local function entry(self, args)
+	args = args.args
+	local mode = args and args[1] or "fzf"
 
-	ps.sub("cd", function()
-		local cwd = tostring(cx.active.current.cwd)
-		ya.emit("shell", {
-			cwd = fs.cwd(),
-			orphan = true,
-			"fasd -A " .. ya.quote(cwd),
-		})
-	end)
-	-- ps.sub("open", function()
-	-- 	local hovered = cx.active.current.hovered
-	-- 	if not hovered then
-	-- 		return
-	-- 	end
-	--
-	-- 	local path = tostring(hovered.url)
-	-- 	ya.emit("shell", {
-	-- 		cwd = fs.cwd(),
-	-- 		orphan = true,
-	-- 		"fasd -A " .. ya.quote(path),
-	-- 	})
-	-- end)
-end
+	if mode == "open" then
+		local h = cx.active.current.hovered
+		local path = tostring(h.url)
+		os.execute('fasd -A "' .. path .. '"')
+		if h.cha.is_dir then
+			ya.emit("enter", { hovered = true })
+		else
+			ya.emit("open", { hovered = not self.open_multi })
+		end
+	elseif mode == "fzf" then
+		local _permit = ya.hide()
+		local cmd = [[fasd -t | sort -k1 -g | fzf --no-sort -e --tac | grep '/.*' -o]]
 
--- fzf-based jump
-local function entry()
-	local st = state()
-	if st.empty == nil then
-		st.empty = empty()
-		set_state(st.empty)
-	end
+		local child, err1 = Command("sh"):arg({ "-c", cmd }):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		if not child then
+			return fail("Failed to start fasd command: %s", err1)
+		end
 
-	if st.empty then
-		return fail("No Fasd entries found. Visit some folders first to build your history.")
-	end
+		local output, err2 = child:wait_with_output()
+		if not output then
+			return fail("Cannot read fasd output: %s", err2)
+		elseif not output.status.success and output.status.code ~= 130 then
+			return fail("Fasd exited with code %s: %s", output.status.code, output.stderr)
+		end
 
-	local _permit = ui.hide()
-	local cmd = [[fasd -t | sort -k1 -g | fzf --no-sort -e --tac | grep '/.*' -o]]
+		local target = output.stdout:gsub("\n$", "")
+		if target == "" then
+			return
+		end
 
-	local child, err1 = Command("sh"):arg({ "-c", cmd }):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+		local target_stat = fs.cha(target)
+		if not target_stat then
+			return fail("Path not found: %s", target)
+		end
 
-	if not child then
-		return fail("Failed to start fasd command: %s", err1)
-	end
-
-	local output, err2 = child:wait_with_output()
-	if not output then
-		return fail("Cannot read fasd output: %s", err2)
-	elseif not output.status.success and output.status.code ~= 130 then
-		return fail("Fasd exited with code %s: %s", output.status.code, output.stderr)
-	end
-
-	local target = output.stdout:gsub("\n$", "")
-	if target == "" then
-		return
-	end
-
-	local target_stat = fs.cha(target)
-	if not target_stat then
-		return fail("Path not found: %s", target)
-	end
-
-	if target_stat.is_dir then
-		ya.emit("cd", { target, raw = true })
-	elseif target_stat.is_file then
-		ya.emit("select", { target })
+		if target_stat.is_dir then
+			ya.emit("cd", { target, raw = true })
+		elseif target_stat.is_file then
+			ya.emit("hover", { target })
+		else
+			fail("Invalid Fasd target: %s", target)
+		end
 	else
-		fail("Invalid Fasd target: %s", target)
+		-- Invalid argument
+		fail("Invalid mode: %s (expected 'open' or 'fzf')", tostring(mode))
 	end
 end
 
 return {
-	setup = setup,
 	entry = entry,
 }
