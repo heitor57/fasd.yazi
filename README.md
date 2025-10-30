@@ -8,7 +8,6 @@ This plugin contains mainly two actions:
 *   **`open`** – Adds the current hovered file or directory to `fasd`'s database and opens it.
 *   **`fzf`** – Opens a searchable `fzf` picker listing your most-used files and directories tracked by `fasd`.
 
-* * *
 
 ⚙️ Installation
 ---------------
@@ -24,7 +23,6 @@ This plugin contains mainly two actions:
      ya pkg add heitor57/fasd
     ```
 
-* * *
 
 How It Works
 ---------------
@@ -35,7 +33,6 @@ How It Works
     ```
 *   You can then recall frequently or recently visited items using an interactive **fzf** picker.
 
-* * *
 
 Usage
 --------
