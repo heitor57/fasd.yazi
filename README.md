@@ -40,7 +40,7 @@ How It Works
 Usage
 --------
 
-Add keybindings in your Yazi `keymap.toml` (or equivalent):
+Add keybindings in your Yazi `keymap.toml`:
 
 ```lua
 { on = "ç",        run = "plugin fasd fzf",  desc = "Search and open from Fasd using fzf" },
