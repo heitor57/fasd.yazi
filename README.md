@@ -1,1 +1,1 @@
-# fasd.yazi
+# fasd-fzf.yazi
