@@ -8,6 +8,11 @@ This plugin contains mainly two actions:
 *   **`open`** – Adds the current hovered file or directory to `fasd`'s database and opens it.
 *   **`fzf`** – Opens a searchable `fzf` picker listing your most-used files and directories tracked by `fasd`.
 
+Why not use just zoxide?
+---------------
+
+fasd tracks both files and directories and enables quickly reaching files too, while zoxide focuses mainly on directory navigation.
+
 
 ⚙️ Installation
 ---------------
@@ -40,7 +45,7 @@ Usage
 Add keybindings in your Yazi `keymap.toml`:
 
 ```lua
-{ on = "ç",        run = "plugin fasd fzf",  desc = "Search and open from Fasd using fzf" },
+{ on = "z",        run = "plugin fasd fzf",  desc = "Search and open from Fasd using fzf" },
 { on = "<Enter>",  run = "plugin fasd open", desc = "Add to Fasd and open hovered item" },
 { on = "<Right>",  run = "plugin fasd open", desc = "Add to Fasd and open hovered item" },
 { on = "l",  run = "plugin fasd open", desc = "Add to Fasd and open hovered item" },
